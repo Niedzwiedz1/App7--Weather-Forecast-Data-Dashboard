@@ -10,23 +10,26 @@ days = st.slider("Forecast Days", min_value=1, max_value=5,
 option = st.selectbox("Select data to view", ("Temperature", "Sky"))
 st.subheader(f"{option} for next {days} days in {place}")
 
+try:
+    if place:
+        # get the data from the function
+        filtered_data = get_data(place, days)
 
-if place:
+        if option == "Temperature":
+            temperatures = [i['main']['temp'] for i in filtered_data]
+            correct_temp = [temp-273 for temp in temperatures]
+            dates = [j["dt_txt"] for j in filtered_data]
 
-# get the data from the function
+            # Create a temperature graph
+            figure = px.line(x=dates, y=correct_temp, labels={"x": "Date", "y": "Temperature (C)"})
+            st.plotly_chart(figure)
 
-    filtered_data = get_data(place, days)
-    if option == "Temperature":
-        temperatures = [i['main']['temp'] for i in filtered_data]
-        dates = [j["dt_txt"] for j in filtered_data]
-        # Create a temperature graph
-        figure = px.line(x=dates, y=temperatures, labels={"x": "Date", "y": "Temperature (C)"})
-        st.plotly_chart(figure)
-    if option == "Sky":
-        images = {"Clouds": "images/cloud.png", "Snow": "images/snow.png",
-                  "Rain": "images/rain.png", "Clear": "images/clear.png"}
+        if option == "Sky":
+            images = {"Clouds": "images/cloud.png", "Snow": "images/snow.png",
+                      "Rain": "images/rain.png", "Clear": "images/clear.png"}
 
-        conditions = [k["weather"][0]["main"] for k in filtered_data]
-        print(conditions)
-        image_paths = [images[condition]for condition in conditions]
-        st.image(image_paths, width=115)
+            conditions = [k["weather"][0]["main"] for k in filtered_data]
+            image_paths = [images[condition]for condition in conditions]
+            st.image(image_paths, width=115)
+except KeyError:
+    st.write("Incorrect city name or city is not in the database!")
